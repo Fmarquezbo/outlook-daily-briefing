@@ -157,13 +157,7 @@ genera un resumen ejecutivo en 10 secciones según las pautas de análisis.
 Proporciona el resumen estructurado en las 10 secciones especificadas,
 con información concisa y accionable para la autoridad CSIRT."""
                 }
-            ],
-            thinking={
-                "type": "adaptive"
-            },
-            output_config={
-                "effort": "high"
-            }
+            ]
         )
 
         briefing_text = response.content[0].text
