@@ -1,0 +1,48 @@
+{
+  "flow_name": "Outlook Daily Briefing Trigger",
+  "description": "Extrae correos del día anterior y envía al API de resumen diario",
+  "trigger": {
+    "type": "Scheduled Cloud Flow",
+    "description": "Ejecutar cada día a las 07:45 CET (15 minutos antes de enviar el resumen)",
+    "schedule": {
+      "frequency": "Day",
+      "interval": 1,
+      "time_zone": "W. Europe Standard Time",
+      "start_time": "07:45:00"
+    }
+  },
+  "actions": [
+    {
+      "action": "Get events (V2)",
+      "description": "Obtener correos del día anterior (últimas 24 horas)",
+      "parameters": {
+        "mailbox": "your_corporate_outlook_mailbox",
+        "folder_path": "Inbox",
+        "search_filter": "receivedDateTime ge '{{addDays(utcNow(), -1)}}'",
+        "sort_by": "ReceivedDateTime",
+        "sort_order": "Descending"
+      }
+    },
+    {
+      "action": "Create JSON",
+      "description": "Construir estructura JSON con los correos",
+      "expression": "json({\n  \"emails\": map(items('Apply_to_each'), {\n    \"sender\": item().from.emailAddress.address,\n    \"subject\": item().subject,\n    \"body\": item().bodyPreview,\n    \"date\": item().receivedDateTime\n  })\n})"
+    },
+    {
+      "action": "HTTP - POST",
+      "description": "Enviar correos al API de resumen",
+      "parameters": {
+        "method": "POST",
+        "uri": "https://your_api_domain.com/process-emails",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": "@{body('Create_JSON')}",
+        "authentication": {
+          "type": "None"
+        }
+      }
+    }
+  ],
+  "notes": "CONFIGURACIÓN NECESARIA:\n1. Reemplazar 'your_corporate_outlook_mailbox' con tu buzón corporativo\n2. Reemplazar 'https://your_api_domain.com' con la URL donde está desplegado el API\n3. Ajustar la zona horaria si no es W. Europe Standard Time\n4. La hora de ejecución (07:45) envía el resumen 5 minutos antes de las 07:50\n5. El filtro de búsqueda obtiene todos los correos del último día"
+}
